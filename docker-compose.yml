@@ -1,0 +1,14 @@
+# Se ejecuta DESDE DEBIAN (WSL2): docker compose up --build
+name: prototipo-gm-ticket-support
+
+services:
+  web:
+    build: .
+    # Red del host (Debian): el contenedor ve el túnel SSH en 127.0.0.1 y Windows ve la web en localhost
+    network_mode: host
+    volumes:
+      - ./:/app
+    environment:
+      - GMTS_CONFIG=${GMTS_CONFIG:-}
+    command: php -S 0.0.0.0:${PORT:-8091} -t public
+    restart: "no"

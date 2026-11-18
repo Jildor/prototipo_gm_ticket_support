@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GM Ticket Support</title>
+    <script>
+        // Aplica el tema guardado antes de pintar para evitar el parpadeo
+        try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch {}
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+    <div class="brand">
+        <span class="logo" aria-hidden="true">GM</span>
+        <div>
+            <div class="brand-name">GM Ticket Support</div>
+            <div class="brand-sub">Atención a jugadores</div>
+        </div>
+        <span class="tag">prototipo</span>
+    </div>
+    <div class="topbar-right">
+        <div id="connection" class="connection">Conectando…</div>
+        <div class="theme-switch" role="radiogroup" aria-label="Tema">
+            <button type="button" data-theme-choice="light" role="radio">☀️ Claro</button>
+            <button type="button" data-theme-choice="dark" role="radio">🌙 Oscuro</button>
+            <button type="button" data-theme-choice="system" role="radio">Sistema</button>
+        </div>
+    </div>
+</header>
+
+<div class="shell">
+    <aside class="sidebar">
+        <div class="project">
+            <span class="project-icon" aria-hidden="true">TS</span>
+            <div>
+                <div class="project-name">Soporte GM</div>
+                <div class="project-type">Proyecto de servicio</div>
+            </div>
+        </div>
+
+        <nav class="nav" aria-label="Secciones">
+            <a href="#tickets-section" class="active">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                Cola de tickets</a>
+            <a href="#search-section">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                Buscar tickets</a>
+            <a href="#requests-section">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                Peticiones</a>
+            <div class="nav-label dev-only">Herramientas</div>
+            <a href="#raw-card" class="dev-only">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
+                Inserción manual</a>
+            <a href="#sql-card" class="dev-only">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg>
+                SQL de la última acción</a>
+        </nav>
+
+        <div class="agent">
+            <div class="agent-head">
+                <span class="step-num" aria-hidden="true">1</span>
+                <div>
+                    <div class="agent-title">Tu personaje GM</div>
+                    <div class="muted small">Tus acciones quedan firmadas con él</div>
+                </div>
+            </div>
+            <div class="stack session-box" id="session-box" hidden>
+                <span class="field-label">Sesión</span>
+                <div class="row between"><strong id="session-user"></strong><button type="button" class="btn" id="btn-logout">Salir</button></div>
+            </div>
+            <form id="account-form" class="stack">
+                <label for="account" class="field-label">Id de tu cuenta</label>
+                <input id="account" type="number" min="1" placeholder="Por ejemplo, 1" required>
+                <button class="btn">Cargar personajes</button>
+            </form>
+            <div class="stack gm-select" id="gm-box" hidden>
+                <label for="gm" class="field-label">Actuar como</label>
+                <select id="gm"></select>
+            </div>
+            <div id="gm-result"></div>
+            <details class="hint dev-only" id="account-hint">
+                <summary>¿Por qué se pide el id?</summary>
+                <p>En la web real la cuenta es la de la sesión iniciada. Aquí se escribe a mano para simularlo.
+                    El personaje elegido es el que queda en el registro de GM.</p>
+            </details>
+        </div>
+    </aside>
+
+    <main class="content">
+        <section id="tickets-section" class="stack-lg">
+            <div>
+                <div class="breadcrumb">Proyectos <span>/</span> Soporte GM <span>/</span> Tickets</div>
+                <h1>Tickets de jugadores</h1>
+                <p class="lead">Elige un ticket de la cola, léelo y contesta al jugador.</p>
+            </div>
+
+            <ol class="steps" aria-label="Cómo atender un ticket">
+                <li id="step-gm"><span class="step-num" aria-hidden="true">1</span>
+                    <div><strong>Elige tu GM</strong><span>En el panel de la izquierda</span></div></li>
+                <li id="step-ticket"><span class="step-num" aria-hidden="true">2</span>
+                    <div><strong>Abre un ticket</strong><span>Pulsa una fila de la cola</span></div></li>
+                <li id="step-reply"><span class="step-num" aria-hidden="true">3</span>
+                    <div><strong>Responde</strong><span>Con o sin cerrar el ticket</span></div></li>
+            </ol>
+
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-icon c-info"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span>
+                    <div><div class="stat-value" id="stat-open">–</div><div class="stat-label">Abiertos</div></div>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon c-pend"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>
+                    <div><div class="stat-value" id="stat-unseen">–</div><div class="stat-label">Sin ver</div></div>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon c-violet"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+                    <div><div class="stat-value" id="stat-unassigned">–</div><div class="stat-label">Sin asignar</div></div>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon c-ok"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+                    <div><div class="stat-value" id="stat-pending">–</div><div class="stat-label">Peticiones en espera</div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <h2>Cola</h2>
+                    <label class="check small"><input type="checkbox" id="show-all"> Ver también completados y cerrados</label>
+                </div>
+                <div class="table-wrap">
+                    <table class="queue">
+                        <thead>
+                        <tr><th>Clave</th><th>Jugador</th><th>Resumen</th><th>Estado</th><th>Creado</th></tr>
+                        </thead>
+                        <tbody id="tickets"></tbody>
+                    </table>
+                </div>
+                <p class="card-foot">
+                    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+                    Se actualiza sola cada 10 s · lectura directa de <code>gm_ticket</code></p>
+            </div>
+        </section>
+
+        <section class="card" id="search-section">
+            <div class="card-head">
+                <h2>Buscar tickets</h2>
+            </div>
+            <p class="card-sub">Busca en todos los tickets, también los ya atendidos, por el nombre del jugador o
+                del GM que respondió. Basta con el principio del nombre.</p>
+            <form id="search-form" class="search-form">
+                <select id="search-by" aria-label="Buscar por">
+                    <option value="player">Jugador</option>
+                    <option value="gm">GM que respondió</option>
+                </select>
+                <input id="search-q" placeholder="Nombre" minlength="2" required autocomplete="off">
+                <button class="btn primary">Buscar</button>
+            </form>
+            <div id="search-result"></div>
+            <div class="table-wrap" id="search-wrap" hidden>
+                <table class="queue">
+                    <thead>
+                    <tr><th>Clave</th><th>Jugador</th><th>Resumen</th><th>Respondido por</th><th>Estado</th><th>Creado</th></tr>
+                    </thead>
+                    <tbody id="search-tickets"></tbody>
+                </table>
+            </div>
+            <p class="card-foot">Si responden varios GM al mismo ticket, solo se guarda el último.</p>
+        </section>
+
+        <dialog class="ticket-dialog" id="ticket-card" aria-labelledby="ticket-heading">
+            <div class="dialog-head">
+                <h2 id="ticket-heading"><span class="muted">Ticket</span> <span id="ticket-title"></span></h2>
+                <div class="dialog-nav">
+                    <span class="muted small" id="ticket-pos"></span>
+                    <button type="button" class="btn icon" id="btn-prev" aria-label="Ticket anterior" title="Ticket anterior">
+                        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+                    <button type="button" class="btn icon" id="btn-next" aria-label="Ticket siguiente" title="Ticket siguiente">
+                        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+                    <button type="button" class="btn icon" id="btn-close" aria-label="Cerrar" title="Cerrar (Esc)">
+                        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+                </div>
+            </div>
+            <div class="ticket-grid">
+                <div id="ticket"></div>
+                <div id="reply-box">
+                    <h3>Tu respuesta</h3>
+                    <textarea id="reply" rows="7" placeholder="Escribe aquí la respuesta para el jugador…"></textarea>
+                    <div class="meter" aria-hidden="true"><div class="meter-bar" id="reply-meter"></div></div>
+                    <div class="small"><span id="reply-bytes" class="muted"></span></div>
+                    <div id="reply-checks"></div>
+                    <div class="actions">
+                        <button id="btn-respond" class="action" title="RESPONSE_APPEND: el servidor la envía solo en su siguiente pasada (SendCompletedTickets, 5 min como máximo)">
+                            <span class="action-title">Responder</span>
+                            <span class="action-desc">Le llega en la próxima pasada del servidor (hasta 5 min). El ticket sigue abierto.</span>
+                        </button>
+                        <button id="btn-complete" class="action primary" title="COMPLETE con el texto: se envía al momento y el ticket sale de la lista">
+                            <span class="action-title">Responder y completar</span>
+                            <span class="action-desc">Le llega al momento y el ticket sale de la cola.</span>
+                        </button>
+                    </div>
+                    <p class="note">Si el ticket ya tiene respuesta, «Responder y completar» sin texto solo lo completa.</p>
+                    <label class="check small dev-only">
+                        <input type="checkbox" id="skip-checks">
+                        Saltar las comprobaciones de la web (para probar las del servidor)
+                    </label>
+                    <div id="action-result"></div>
+                </div>
+            </div>
+        </dialog>
+
+        <section class="card" id="requests-section">
+            <div class="card-head">
+                <h2>Peticiones al servidor <span class="muted small" id="requests-filter"></span></h2>
+                <label class="check small"><input type="checkbox" id="only-ticket" checked> Solo este ticket</label>
+            </div>
+            <p class="card-sub">Cada acción se apunta como petición y el worldserver la recoge en su siguiente ciclo
+                (cada 5 s). Mientras tanto aparece como <span class="badge s0">Pendiente</span></p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>Id</th><th>Ticket</th><th>Acción</th><th>GM</th><th>Estado</th><th>Resultado</th><th>Creada</th><th>Espera</th></tr>
+                    </thead>
+                    <tbody id="requests"></tbody>
+                </table>
+            </div>
+            <p class="card-foot">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+                Se actualiza sola cada 3 s</p>
+        </section>
+
+        <div class="tools dev-only">
+            <div class="tools-label">Herramientas de pruebas</div>
+            <details class="card tool" id="raw-card">
+                <summary><h2>Inserción manual</h2><span class="muted small">Sin comprobaciones</span></summary>
+                <p class="card-sub">Inserta tal cual, como desde SQLyog: acciones de la segunda versión, GM de
+                    otra cuenta, emojis, ticket de otro jugador… La web real no debe hacer esto.</p>
+                <form id="raw-form" class="grid">
+                    <label>ticket_id <input id="raw-ticket" type="number" min="0" required></label>
+                    <label>player_guid <input id="raw-player" type="number" min="0" required></label>
+                    <label>action <input id="raw-action" type="number" min="0" max="255" value="5" required></label>
+                    <label>gm_guid <input id="raw-gm" type="number" min="0" required></label>
+                    <label class="wide">text <textarea id="raw-text" rows="3" placeholder="vacío = NULL"></textarea></label>
+                    <div class="wide"><button class="btn primary">Insertar</button></div>
+                </form>
+                <div id="raw-result"></div>
+            </details>
+
+            <details class="card tool" id="sql-card" open>
+                <summary><h2>SQL de la última acción</h2><span class="muted small">Consultas exactas</span></summary>
+                <div id="sql"><p class="card-sub">Aquí aparecerán las consultas de tu próxima acción.</p></div>
+            </details>
+        </div>
+    </main>
+</div>
+
+<dialog class="login-dialog" id="login-dialog" aria-labelledby="login-heading">
+    <form id="login-form" class="stack">
+        <div class="brand">
+            <span class="logo" aria-hidden="true">GM</span>
+            <div>
+                <div class="brand-name" id="login-heading">GM Ticket Support</div>
+                <div class="brand-sub">Inicia sesión para atender tickets</div>
+            </div>
+        </div>
+        <label for="login-user" class="field-label">Usuario</label>
+        <input id="login-user" autocomplete="username" required>
+        <label for="login-password" class="field-label">Contraseña</label>
+        <input id="login-password" type="password" autocomplete="current-password" required>
+        <button class="btn primary" id="btn-login">Entrar</button>
+        <div id="login-result"></div>
+    </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
