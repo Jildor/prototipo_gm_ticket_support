@@ -32,17 +32,11 @@ final class GmTicketSupport
     /** A partir de aquí el servidor envía la respuesta en varios trozos y una tilde puede verse mal en el corte. */
     public const WARN_RESPONSE_BYTES = 3999;
 
-    /** Acciones. Las de la segunda versión tienen el número reservado y hoy el servidor las rechaza (código 2). */
+    /** Acciones. Cualquier otro número lo rechaza el servidor (código 2). */
     public const ACTION_NAMES = [
         1 => 'Ver',
-        2 => 'Asignar (v2)',
-        3 => 'Desasignar (v2)',
-        4 => 'Comentar (v2)',
         5 => 'Responder',
         6 => 'Completar',
-        7 => 'Cerrar (v2)',
-        8 => 'Borrar (v2)',
-        9 => 'Escalar (v2)',
     ];
 
     public const STATUS_NAMES = [

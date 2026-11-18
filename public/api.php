@@ -169,7 +169,7 @@ try {
             respond(true, ['request' => $ts->getRequest($id), 'warnings' => $warnings]);
 
         case 'raw':
-            // Inserción manual sin comprobar nada (acciones de la v2, GM de otra cuenta, textos inválidos...)
+            // Inserción manual sin comprobar nada (acciones que no existen, GM de otra cuenta, textos inválidos...)
             $text = (string) ($input['text'] ?? '');
             $id = $ts->insertRequest((int) ($input['ticket_id'] ?? 0), (int) ($input['player_guid'] ?? 0), (int) ($input['action'] ?? 0),
                 (int) ($input['gm_guid'] ?? 0), $text === '' ? null : $text, $requestedBy);

@@ -34,7 +34,6 @@ cierra la fila con el resultado.
 | `player_guid` | Web | `gm_ticket.playerGuid` que la web tenía en pantalla. Los números de ticket se reutilizan tras `.ticket reset`: si no coincide, el servidor rechaza la petición (código 4) |
 | `action` | Web | Ver §4 |
 | `gm_guid` | Web | Personaje del GM con el que actúa (de la cuenta de la sesión) |
-| `target_guid` | — | Reservada para la segunda versión. Dejar `NULL` |
 | `text` | Web | Texto de la respuesta. `NULL` en *Ver* |
 | `requested_by` | Web | Libre, para la web (p. ej. usuario del panel). El servidor no lo usa |
 | `status` | Servidor | 0 pendiente, 1 hecho, 2 error |
@@ -49,9 +48,8 @@ cierra la fila con el resultado.
 | 5 | **Responder**: añade el texto a la respuesta. El servidor la envía sola en su siguiente pasada (hasta 5 min) y entonces el ticket queda completado | `.ticket response append` | Obligatorio |
 | 6 | **Completar**: añade el texto (si lo hay), envía la respuesta al momento y saca el ticket de la lista | `.ticket response append` + `.ticket complete` | Opcional si el ticket ya tiene respuesta |
 
-Los números 2, 3, 4, 7, 8 y 9 (asignar, desasignar, comentar, cerrar, borrar, escalar) están reservados para una
-segunda versión. Hoy el servidor los rechaza con el código 2. El staff no los usa desde hace años; si hicieran
-falta se siguen haciendo desde el juego.
+Cualquier otro número lo rechaza el servidor con el código 2. Asignar, comentar, cerrar, borrar o escalar un
+ticket se sigue haciendo desde el juego.
 
 ## 5. Flujo recomendado
 

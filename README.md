@@ -130,7 +130,7 @@ inicio de sesión, así que no la publiques en canales abiertos.
 5. **Peticiones**: lista que se actualiza cada 3 s, del ticket abierto o de todos. Cada fila pasa de *Pendiente* a
    *Hecho* o *Error* con el motivo.
 6. **SQL de la última acción**: las consultas exactas que ha lanzado la web, con sus parámetros.
-7. **Inserción manual**: inserta sin comprobar nada (acciones de la segunda versión, GM de otra cuenta, emojis,
+7. **Inserción manual**: inserta sin comprobar nada (acciones que no existen, GM de otra cuenta, emojis,
    ticket de otro jugador).
 
 ## Ficheros
